@@ -1,0 +1,1 @@
+# bs-shopify-slide-sticky-offer
