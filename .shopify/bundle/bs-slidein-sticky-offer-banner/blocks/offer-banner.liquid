@@ -1,0 +1,252 @@
+{% assign bannersData = app.metafields.slide-in-sticky-offer-banner.bs-slideIn-banner-OV27PT.value %}
+
+<div id="bs-slideIn-banner-section"></div>
+
+{% style %}
+    .bs-sliding-banner {
+        display: flex;
+        align-items: center;
+        box-sizing: border-box;
+        position: fixed;
+        z-index: {{ block.settings.z-index }};
+        transform: translate(0, -50%);
+        transition: right {{ block.settings.animation-speed }}s ease-out, left {{ block.settings.animation-speed }}s ease-out;
+        flex-direction: row-reverse; 
+        top: 70vh;
+    }
+
+    .bs-sliding-banner-right {
+        display: flex;
+        align-items: center;
+        box-sizing: border-box;
+        position: fixed;
+        z-index: {{ block.settings.z-index }};
+        transform: translateY(-50%);
+        transition: right {{ block.settings.animation-speed }}s ease-out;
+        top: 70vh;
+        right: 0;
+    }
+{% endstyle %}
+
+{% schema %}
+    {
+        "name": "BS Offer Banner",
+        "target": "body",
+        "stylesheet": "bs-banner.css",
+        "settings": [
+            {
+                "type": "select",
+                "id": "position",
+                "label": "Position",
+                "info": "Choose where the banner will be displayed on the screen.",
+                "options": [
+                    {
+                        "value": "left",
+                        "label": "Left"
+                    },
+                    {
+                        "value": "right",
+                        "label": "Right"
+                    }
+                ],
+                "default": "right"
+            },
+            {
+                "type": "number",
+                "id": "z-index",
+                "label": "Z-Index",
+                "default": 1045,
+                "info": "Increase the z-index if the banner button is overlapped or If the button obstructs other elements than decrease the z-index while keeping it positive."
+            },
+            {
+                "type": "select",
+                "id": "view-on-mobile",
+                "label": "View on Mobile",
+                "options": [
+                    {
+                        "value": "yes",
+                        "label": "Yes"
+                    },
+                    {
+                        "value": "no",
+                        "label": "No"
+                    }
+                ],
+                "default": "no"
+            },
+            {
+                "type": "text",
+                "id": "animation-speed",
+                "label": "Animation Speed",
+                "default": "0.5",
+                "info": "Specify the speed of the banner slider animation in seconds. Accepts a positive floating-point value up to one decimal place (e.g., 0.5)."
+            }
+        ]
+    }
+{% endschema %}
+
+<script>
+
+    (() => {
+
+        // Check if script has already run
+        if (window.bannerScriptExecuted) {
+            return;
+        }
+        
+        // Set flag to indicate script has run
+        window.bannerScriptExecuted = true;
+
+        // Helper function to clean up the JSON string
+        const cleanJsonString = (str) => {
+            return str
+                .replace(/&quot;/g, '"')
+                .replace(/&gt;/g, '>')
+                .replace(/&lt;/g, '<')
+                .replace(/=>/g, ':')
+                .replace(/(\w+)=>"/g, '"$1":"')
+                .replace(/=>(\d+)/g, ':$1')
+                .replace(/([{,]\s*)(\w+):/g, '$1"$2":');
+        };
+
+        // Main parser function
+        const parseBannersData = (rawData) => {
+            if (!rawData) { return null; }
+            try {
+                const cleanedStr = cleanJsonString(rawData);
+                const parsed = JSON.parse(cleanedStr);
+                if (!Array.isArray(parsed)) {
+                    return null;
+                }
+                return parsed;
+            } catch (error) {
+                return null;
+            }
+        };
+
+        let priorityBanner = null;
+
+        document.addEventListener('DOMContentLoaded', () => {
+
+            const bannersData = parseBannersData('{{ bannersData | escape }}');
+
+            if (bannersData) {
+
+                const bsBannerSection = document.getElementById('bs-slideIn-banner-section');        
+                const currantDate = new Date();
+                const utcCurrantDate = currantDate.toISOString().slice(0, 19).replace('T', ' ');
+                
+                bannersData.sort((a, b) => a.priority - b.priority);
+
+                for (const banner of bannersData) {
+
+                    const startDate = new Date(banner.startDate);
+                    const formattedStartDate = startDate.toLocaleString('sv').replace('T', ' ');
+                    const endDate = new Date(banner.endDate);
+                    const formattedEndDate = endDate.toLocaleString('sv').replace('T', ' ');
+
+                    if (utcCurrantDate >= formattedStartDate && utcCurrantDate <= formattedEndDate) {
+                        priorityBanner = banner;
+                        break;
+                    }
+                }
+                
+                if (priorityBanner) {
+                    
+                    const screenWidth = window.innerWidth;
+                    const position = '{{ block.settings.position }}';
+                    const viewOnMobile = '{{ block.settings.view-on-mobile }}';
+
+                    if (screenWidth < 576 && viewOnMobile == "no") {
+                        bsBannerSection.innerHTML = "";
+                        
+                    } else {
+
+                        if (position == "left") {
+                            
+                            bsBannerSection.innerHTML = `
+                                <div class="bs-sliding-banner">
+
+                                    <div class="bs-sliding-banner-handle">
+                                        <img class="bs-sliding-banner-arrow-image" alt="arrow image" src="{{ 'play.png' | asset_img_url }}">
+                                        <p class="bs-sliding-banner-handle__title">${priorityBanner.title}</p>
+                                    </div>
+
+                                    <a class="bs-sliding-banner-advertise" href="${priorityBanner?.link ? priorityBanner.link : "#"}" rel="noopener" target="_blank">
+                                        <img class="bs-sliding-banner-advertise-image" alt="banner image" src="${priorityBanner.imageUrl}">
+                                    </a>
+
+                                </div>`;
+
+                        } else if (position == "right") {
+                            
+                            bsBannerSection.innerHTML = ` 
+                                <div class="bs-sliding-banner-right">
+
+                                    <div class="bs-sliding-banner-right-handle">
+                                        <img class="bs-sliding-right-banner-arrow-image" alt="arrow image" src="{{ 'play.png' | asset_img_url }}">
+                                        <p class="bs-sliding-banner-handle-right__title">${priorityBanner.title}</p>
+                                    </div>
+
+                                    <a class="bs-sliding-banner-advertise" href="${priorityBanner?.link ? priorityBanner.link : "#"}" rel="noopener" target="_blank">
+                                        <img class="bs-sliding-banner-advertise-image" alt="banner image" src="${priorityBanner.imageUrl}">
+                                    </a>
+
+                                </div>`;
+                        }
+
+                        // For left side offer banner
+                        const slidingBanner = document.querySelector('.bs-sliding-banner');
+
+                        if (slidingBanner) {
+
+                            const width = screenWidth > 576 ? `${priorityBanner.width}px` : '90%';
+                            const left = screenWidth > 576 ? `-${priorityBanner.width - 38}px` : 'calc(-90% + 28px)';
+                            Object.assign(slidingBanner.style, { width, left });
+
+                            const handle = slidingBanner.querySelector('.bs-sliding-banner-handle');
+                            const arrow = slidingBanner.querySelector('.bs-sliding-banner-arrow-image');
+
+                            let isOpen = false;
+
+                            handle.addEventListener('click', function() {
+                                arrow.style.transform = isOpen ? 'rotate(0deg)' : 'rotate(180deg)';
+                                slidingBanner.style.left = isOpen ? left : '0px';
+                                isOpen = !isOpen;
+                            });
+                        }
+
+                        // For right side offer banner
+                        const slidingBannerRight = document.querySelector('.bs-sliding-banner-right');
+
+                        if (slidingBannerRight) {
+
+                            const width = screenWidth > 576 ? `${priorityBanner.width}px` : '90%';
+                            const right = screenWidth > 576 ? `-${priorityBanner.width - 38}px` : 'calc(-90% + 28px)';
+                            Object.assign(slidingBannerRight.style, { width, right });
+
+                            const handleRight = slidingBannerRight.querySelector('.bs-sliding-banner-right-handle');
+                            const arrowRight = slidingBannerRight.querySelector('.bs-sliding-right-banner-arrow-image');
+
+                            let isRightOpen = false;
+
+                            handleRight.addEventListener('click', function () {
+                                arrowRight.style.transform = isRightOpen ? 'rotate(180deg)' : 'rotate(0deg)';
+                                slidingBannerRight.style.right = isRightOpen ? right : '0px';
+                                isRightOpen = !isRightOpen;
+                            });
+                        }
+
+                        // Banner advertise image
+                        if (slidingBanner || slidingBannerRight) {
+                            const advertiseImage = document.querySelector('.bs-sliding-banner-advertise-image');
+                            advertiseImage.style.width = screenWidth > 576 ? priorityBanner.width + 'px' : '100%';
+                        }
+                    }
+                }
+            }
+        });
+      
+    })();
+
+</script>
