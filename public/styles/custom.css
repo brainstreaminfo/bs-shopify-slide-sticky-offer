@@ -1,0 +1,24 @@
+.react-datepicker-wrapper {
+    width: 100% !important;
+}
+
+.react-datepicker__input-container input {
+    width: 100%;
+    padding: 0.50rem 0.75rem;
+    border-radius: 8px;
+    border: 1px solid #898F94;
+}
+
+.react-datepicker-popper {
+    z-index: 99 !important;
+}
+
+.imgError {
+    margin-top: 5px;
+    display: flex;
+    color: #8E1F0B;
+}
+
+.imgError .Polaris-Icon {
+    margin: 0;
+}

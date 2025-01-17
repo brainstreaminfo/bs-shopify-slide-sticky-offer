@@ -1,0 +1,37 @@
+# Learn more about configuring your app at https://shopify.dev/docs/apps/tools/cli/configuration
+
+client_id = "73b7a6dc3857140651405b808ec2c878"
+application_url = "https://corporations-analyzed-fan-herb.trycloudflare.com"
+embedded = true
+name = "BS SlideIn Sticky Offer Banner"
+handle = "bs-slidein-sticky-offer-banner"
+
+[build]
+automatically_update_urls_on_dev = true
+dev_store_url = "bs-slidein-sticky-offer-banner.myshopify.com"
+include_config_on_deploy = true
+
+[webhooks]
+api_version = "2025-01"
+
+  [[webhooks.subscriptions]]
+  topics = [ "app/scopes_update" ]
+  uri = "/webhooks/app/scopes_update"
+
+  [[webhooks.subscriptions]]
+  topics = [ "app/uninstalled" ]
+  uri = "/webhooks/app/uninstalled"
+
+[access_scopes]
+# Learn more at https://shopify.dev/docs/apps/tools/cli/configuration#access_scopes
+scopes = "write_products, write_files, write_themes, read_files, read_themes"
+
+[auth]
+redirect_urls = [
+  "https://corporations-analyzed-fan-herb.trycloudflare.com/auth/callback",
+  "https://corporations-analyzed-fan-herb.trycloudflare.com/auth/shopify/callback",
+  "https://corporations-analyzed-fan-herb.trycloudflare.com/api/auth/callback"
+]
+
+[pos]
+embedded = false
