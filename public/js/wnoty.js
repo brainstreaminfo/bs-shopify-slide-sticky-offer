@@ -75,6 +75,7 @@
             main.appendChild(close);
             wrapper.appendChild(icon);
             wrapper.appendChild(text);
+            text.style.fontSize = "15px";
             text.innerHTML = set.message;
 			$("." + notify + "-notification").removeClass("wnoty-show");
 			$("#leight-" + g).addClass("wnoty-show");

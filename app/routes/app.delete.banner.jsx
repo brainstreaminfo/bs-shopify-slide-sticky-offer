@@ -84,7 +84,7 @@ export const action = async ({ request }) => {
                     );
                     
                 } catch (error) {
-                    return { success: false, message: 'Something went wrong while deleting the offer banner.' };
+                    return { success: false, message: 'Failed to delete the offer banner.' };
                 }
 
                 // Update banner data
@@ -125,14 +125,14 @@ export const action = async ({ request }) => {
                     return { success: false, message: "An error occurred while deleting the offer banner." };
                 }
 
-                return { success: true, message: "Offer banner has been deleted." };
+                return { success: true, message: "Offer banner deleted." };
 
             } else {
-                return { success: false, message: 'Something went wrong while deleting the offer banner.' };
+                return { success: false, message: 'Failed to delete the offer banner..' };
             }
 
         } else {
-            return { success: false, message: 'Something went wrong while deleting the offer banner.' };
+            return { success: false, message: 'Failed to delete the offer banner..' };
         }
     
     } catch (error) {        

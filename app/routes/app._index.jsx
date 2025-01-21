@@ -1,6 +1,7 @@
 import {
     Page,
     Card,
+    Badge,
     Layout,
     Button,
     IndexTable,
@@ -30,6 +31,7 @@ export default function Index() {
     const [loading, setLoading] = useState(true);
     const [isClient, setIsClient] = useState(true);
     const [isEnableAppLink, setIsEnableAppLink] = useState(false);
+    const [isDeleting, setIsDeleting] = useState(false);
 
     const fetchBannerData = async () => {
 
@@ -88,7 +90,7 @@ export default function Index() {
     const {selectedResources} = useIndexResourceState(currentData);
 
     const rowMarkup = currentData.map(
-        ({uid, title, priority, startDate, endDate, width}, index,) => (
+        ({uid, title, status, startDate, endDate, width}, index,) => (
             <IndexTable.Row
                 id={uid}
                 key={uid}
@@ -96,10 +98,16 @@ export default function Index() {
                 position={index}
             >
                 <IndexTable.Cell>{title}</IndexTable.Cell>
-                <IndexTable.Cell>{priority}</IndexTable.Cell>
                 <IndexTable.Cell>{format(new Date(startDate), 'MMMM d, yyyy h:mm aa')}</IndexTable.Cell>
                 <IndexTable.Cell>{format(new Date(endDate), 'MMMM d, yyyy h:mm aa')}</IndexTable.Cell>
                 <IndexTable.Cell>{width}</IndexTable.Cell>
+                <IndexTable.Cell>
+                    {status === 1 ? (
+                        <Badge tone="success">Active</Badge>
+                    ) : (
+                        <Badge tone="critical">Inactive</Badge>
+                    )}
+                </IndexTable.Cell>
                 <IndexTable.Cell>
                     <div>
                         <span style={{ paddingRight: "5px" }}>
@@ -138,10 +146,9 @@ export default function Index() {
     // Delete Banner
     const deleteBanner = async() => {
 
-        const button = document.getElementById('delete-banner-btn');
-        button.disabled = true;
-
         try {
+
+            setIsDeleting(true);
 
             const deleteBanner = await fetch('/app/delete/banner', {
                 method: 'POST',
@@ -178,8 +185,8 @@ export default function Index() {
             });
 
         } finally {
+            setIsDeleting(false);
             document.getElementById('confirm-modal').hide();
-            button.disabled = false;
         }
     };
 
@@ -287,10 +294,10 @@ export default function Index() {
                                             emptyState={emptyStateMarkup}
                                             headings={[
                                                 {title: 'Title'},
-                                                {title: 'Priority'},
                                                 {title: 'Start Date'},
                                                 {title: 'End Date'},
                                                 {title: 'Width'},
+                                                {title: 'Status'},
                                                 {title: 'Action'}
                                             ]}
                                             selectable={false}
@@ -324,8 +331,8 @@ export default function Index() {
 
             <ui-modal id="confirm-modal" variant="small">
                 <ui-title-bar title="Delete Offer Banner">
-                <button variant="primary" id='delete-banner-btn' onClick={() => deleteBanner()} >Yes, Delete it</button>
-                <button onClick={() => document.getElementById('confirm-modal').hide()}>Cancel</button>
+                <button variant="primary" id='delete-banner-btn' onClick={() => deleteBanner()} disabled={isDeleting}>{isDeleting ? 'Deleting...' : 'Yes, Delete it'}</button>
+                <button onClick={() => document.getElementById('confirm-modal').hide()} disabled={isDeleting}>Cancel</button>
                 </ui-title-bar>
                 <p style={{ padding: '16px 12px', fontSize: '15px' }}>Are you sure you want to delete?</p>
             </ui-modal>

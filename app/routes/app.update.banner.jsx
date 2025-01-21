@@ -1,12 +1,12 @@
 import { format } from 'date-fns';
 import { authenticate } from "../shopify.server";
 
-const updateObjectInArray = (array, { uid, image, formData, startDate, endDate }) => {
+const updateObjectInArray = (array, { uid, image, formData, startDate, endDate, status }) => {
     array.forEach(obj => {
         if (obj.uid === uid) {
             if (formData.title !== undefined) obj.title = formData.title;
             if (formData.link !== undefined) obj.link = formData.link;
-            if (formData.priority !== undefined) obj.priority = formData.priority;
+            if (status !== undefined) obj.status = status;
             if (formData.width !== undefined) obj.width = formData.width;
             if (startDate !== undefined) obj.startDate = format(new Date(startDate), 'yyyy-MM-dd HH:mm:ss');
             if (endDate !== undefined) obj.endDate = format(new Date(endDate), 'yyyy-MM-dd HH:mm:ss');
@@ -44,7 +44,7 @@ export const action = async ({ request }) => {
 
         if (appInstallationId) {
 
-            const { uid, image, formData, startDate, endDate, imageId } = await request.json();
+            const { uid, image, formData, startDate, endDate, status } = await request.json();
 
             // Get existing banner data
             const findMetaquery = await admin.graphql(
@@ -78,7 +78,12 @@ export const action = async ({ request }) => {
 
                 let existingBanners = findMetaResponse.data.appInstallation.metafields.edges[0].node.value;
                 existingBanners = JSON.parse(existingBanners);
-                const bannerData = updateObjectInArray(existingBanners, { uid, image, formData, startDate, endDate })
+                if (status == 1) {
+                    existingBanners.forEach(banner => {
+                        banner.status = 0;
+                    });
+                }                
+                const bannerData = updateObjectInArray(existingBanners, { uid, image, formData, startDate, endDate, status })
 
                 // Update banner data
                 const createMetaquery = await admin.graphql(
@@ -119,30 +124,30 @@ export const action = async ({ request }) => {
                 }
 
                 // Delete banner image if image changed
-                if (image && imageId) {
-                    await admin.graphql(
-                        `#graphql
-                        mutation fileDelete($input: [ID!]!) {
-                            fileDelete(fileIds: $input) {
-                                deletedFileIds
-                            }
-                        }`,
-                        {
-                            variables: {
-                                "input": [imageId]
-                            },
-                        },
-                    );
-                }
+                // if (image && imageId) {
+                //     await admin.graphql(
+                //         `#graphql
+                //         mutation fileDelete($input: [ID!]!) {
+                //             fileDelete(fileIds: $input) {
+                //                 deletedFileIds
+                //             }
+                //         }`,
+                //         {
+                //             variables: {
+                //                 "input": [imageId]
+                //             },
+                //         },
+                //     );
+                // }
                 
-                return { success: true, message: "Offer banner has been updated." };
+                return { success: true, message: "Offer banner updated." };
 
             }  else {
-                return { success: false, message: 'Something went wrong while updating the offer banner.' };
+                return { success: false, message: 'Failed to update the offer banner.' };
             }
 
         } else {
-            return { success: false, message: 'Something went wrong while updating the offer banner.' };
+            return { success: false, message: 'Failed to update the offer banner.' };
         }
     
     } catch (error) {        

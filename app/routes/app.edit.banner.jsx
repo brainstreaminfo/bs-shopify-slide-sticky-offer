@@ -9,6 +9,7 @@ import {
     Thumbnail,
     TextField,
     BlockStack,
+    ButtonGroup,
     SkeletonPage,
     SkeletonBodyText,
     SkeletonDisplayText
@@ -36,6 +37,15 @@ export default function EditBanner() {
     const [imageUrl, setImageUrl] = useState("");
     const [imageId, setImageId] = useState("");
     const [isImageCahnged, setIsImageCahnged] = useState(false);
+    const [statusIndex, setStatusIndex] = useState(0);
+
+    const handleStatusClick = useCallback(
+        (index) => {
+            if (statusIndex === index) return;
+            setStatusIndex(index);
+        },
+        [statusIndex],
+    );
 
     const fetchBannerData = async (uid) => {
 
@@ -98,7 +108,6 @@ export default function EditBanner() {
     const [formValues, setFormValues] = useState({
         title: "",
         link: "",
-        priority: 1,
         width: 576,
     });
 
@@ -106,8 +115,7 @@ export default function EditBanner() {
         title: "",
         link: "",
         image: "",
-        width: "",
-        priority: ""
+        width: ""
     });
 
     const handleChange = (event, name) => {
@@ -139,24 +147,24 @@ export default function EditBanner() {
     };
 
     useEffect(() => {
-        if (bannerData) {            
+        if (bannerData) {
             setFormValues({
                 uid: bannerData.uid,
                 title: bannerData.title,
                 link: bannerData.link,
-                priority: bannerData.priority,
                 width: bannerData.width,
             });
             setStartDate(bannerData.startDate ? new Date(bannerData.startDate.replace(' ', 'T')) : new Date())
             setEndDate(bannerData.endDate ? new Date(bannerData.endDate.replace(' ', 'T')) : new Date())
             setImageUrl(bannerData.imageUrl)
             setImageId(bannerData.imageId)
+            setStatusIndex(bannerData.status)
         }
     }, [bannerData]);
 
     // Image
     const imageParts = imageUrl ? imageUrl.split('/').pop().split('?')[0] : "";
-    const [imageName, imageType] = imageParts ? imageParts.split('.') : ["", ""];
+    const [imageName] = imageParts ? imageParts.split('.') : ["", ""];
     const [file, setFile] = useState("");
     const handleDropZoneDrop = useCallback(
         (_dropFiles, acceptedFiles, _rejectedFiles) => {
@@ -209,16 +217,25 @@ export default function EditBanner() {
         const errors = {
             title: formValues.title && formValues.title.trim() !== "" ? "" : "Title is required.",
             link: formValues.link && formValues.link.trim() !== "" ? "" : "Link is required.",
-            width: formValues.width ? "" : "Banner width is required.",
-            priority: formValues.priority ? "" : "Priority is required."
         };
         
+        if (!formValues.width) {
+            errors.width = "Banner width is required.";
+        } else if (formValues.width > 876) {
+            errors.width = "Banner Width must be less than 876px.";
+        }  else {
+            errors.width = "";
+        }
+
         if (!file && !imageUrl) {
             errors.image = "Image is required.";
-        } else if (!validImageTypes.includes(file ? file.type : `image/${imageType}`)) {
-            errors.image = "Invalid image type. Only .jpg, .jpeg, and .png are allowed.";
-        }  else if (file.size > 15 * 1024 * 1024) {  // 15 MB = 15 * 1024 * 1024 bytes
-            errors.image = "Image size must be less than 15 MB.";
+        } else if (file) {
+            const { type, size } = file;
+            if (!validImageTypes.includes(type)) {
+                errors.image = "Invalid image type. Only .jpg, .jpeg, and .png are allowed.";
+            } else if (size > 8 * 1024 * 1024) {
+                errors.image = "Image size must be less than 8 MB.";
+            }
         }
         
         setFormErrors(errors);
@@ -235,12 +252,13 @@ export default function EditBanner() {
             setIsSaveLoading(true);
             let imageResponse = {};
         
-            if (!imageUrl && isImageCahnged) {
+            // Upload image
+            if (isImageCahnged) {
 
-                // Upload image
                 const formData = new FormData();
                 formData.append('file', file);
-        
+                formData.append('imageId', imageId);
+
                 const uploadImage = await fetch('/app/image/upload', {
                     method: 'POST',
                     body: formData,
@@ -249,16 +267,16 @@ export default function EditBanner() {
                 imageResponse = await uploadImage.json();
         
                 if (!imageResponse.success) {
-                    $.wnoty({
-                        type: 'error',
-                        message: imageResponse.message || 'Image upload failed.',
-                        autohideDelay: 3000,
-                    });
+                    $.wnoty({ type: 'error', message: imageResponse.message, autohideDelay: 3000 });
                     setIsSaveLoading(false);
                     return;
                 }
         
                 setIsImageCahnged(false);
+
+                if (imageResponse && imageResponse?.data?.id) {
+                    setImageId(imageResponse.data.id);
+                }
             }
         
             const updateBanner = await fetch('/app/update/banner', {
@@ -270,24 +288,17 @@ export default function EditBanner() {
                     formData: formValues,
                     startDate: startDate,
                     endDate: endDate,
-                    imageId: imageId,
+                    status: statusIndex
+                    // imageId: imageId,
                 }),
             });
         
             const updateResponse = await updateBanner.json();
         
             if (!updateResponse.success) {
-                $.wnoty({
-                    type: 'error',
-                    message: updateResponse.message || 'Banner edit failed.',
-                    autohideDelay: 3000,
-                });
+                $.wnoty({ type: 'error', message: updateResponse.message, autohideDelay: 3000 });
                 setIsSaveLoading(false);
                 return;
-            }
-        
-            if (imageResponse && imageResponse?.data?.id) {
-                setImageId(imageResponse.data.id);
             }
         
             $.wnoty({
@@ -391,9 +402,6 @@ export default function EditBanner() {
                                         {uploadedFile}
                                         {fileUpload}
                                     </DropZone>
-                                    <p style={{ fontSize: "12px", color: "gray" }}>
-                                        For the best user experience, use a 576x280 px image for a 576 px banner width. If you adjust the width, scale the image height proportionally to keep the aspect ratio.
-                                    </p>
                                     {formErrors.image && (
                                         <div className="imgError">
                                             <Icon source={AlertCircleIcon} color="critical" />
@@ -402,7 +410,10 @@ export default function EditBanner() {
                                             </span>
                                         </div>
                                     )}
-
+                                    <p style={{ fontSize: "12px", color: "gray" }}>
+                                        For the best user experience, use a 576x280 px image for a 576 px banner width. If you adjust the width, scale the image height proportionally to keep the aspect ratio.
+                                    </p>
+                                   
                                     <div style={{ height: "15px" }}></div>
                                     
                                     <TextField
@@ -416,19 +427,8 @@ export default function EditBanner() {
                                     />
 
                                     <div style={{ height: "15px" }}></div>
-                                    
-                                    <TextField
-                                        label="Priority (1 Highest)"
-                                        name="priority"
-                                        type="number"
-                                        value={formValues.priority}
-                                        onChange={(e) => handleChange(e, "priority")}
-                                        error={formErrors.priority}
-                                    />
 
-                                    <div style={{ height: "15px" }}></div>
-
-                                    <label>Start Date & Time (UTC)</label>
+                                    <label style={{ marginBottom: "4px" }}>Start Date & Time (UTC)</label>
                                     <DatePicker
                                         selected={startDate}
                                         onChange={handleStartDateChange}
@@ -441,7 +441,7 @@ export default function EditBanner() {
 
                                     <div style={{ height: "15px" }}></div>
 
-                                    <label>End Date & Time (UTC)</label>
+                                    <label style={{ marginBottom: "4px" }}>End Date & Time (UTC)</label>
                                     <DatePicker
                                         selected={endDate}
                                         onChange={handleEndDateChange}
@@ -462,9 +462,33 @@ export default function EditBanner() {
                                         onChange={(e) => handleChange(e, "width")}
                                         placeholder="576"
                                         error={formErrors.width}
+                                        max="876"
                                     />
 
                                     <div style={{ height: "15px" }}></div>
+
+                                    <div>
+                                        <label htmlFor="end-date-picker">Status</label>
+                                        <div style={{ marginTop: "4px" }}>
+                                            <ButtonGroup variant="segmented">
+                                                <Button
+                                                    pressed={statusIndex === 1}
+                                                    onClick={() => handleStatusClick(1)}
+                                                >
+                                                    Active
+                                                </Button>
+                                                <Button
+                                                    pressed={statusIndex === 0}
+                                                    onClick={() => handleStatusClick(0)}
+                                                >
+                                                    Inactive
+                                                </Button>
+                                            </ButtonGroup>
+                                            <p style={{ fontSize: "12px", color: "gray", marginTop: "4px" }}>
+                                                If you set this offer banner status as active, all other offer banners status will automatically be set to inactive.
+                                            </p>
+                                        </div>
+                                    </div>
 
                                 </BlockStack>
 

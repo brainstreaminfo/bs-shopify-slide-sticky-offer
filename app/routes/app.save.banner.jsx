@@ -27,7 +27,7 @@ export const action = async ({ request }) => {
 
         if (appInstallationId) {
 
-            const { image, formData, startDate, endDate } = await request.json();
+            const { image, formData, startDate, endDate, status } = await request.json();
 
             let bannerData = [{
                 uid: uuidv4(),
@@ -35,10 +35,10 @@ export const action = async ({ request }) => {
                 imageId: image.id,
                 imageUrl: image.image.url,
                 link: formData.link,
-                priority: formData.priority,
                 startDate: format(new Date(startDate), 'yyyy-MM-dd HH:mm:ss'),
                 endDate: format(new Date(endDate), 'yyyy-MM-dd HH:mm:ss'),
                 width: formData.width,
+                status: status
             }]
 
             // Get existing banner data
@@ -73,6 +73,11 @@ export const action = async ({ request }) => {
             if (findMetaResponse?.data?.appInstallation?.metafields?.edges[0]?.node?.value) {
                 let existingBanners = findMetaResponse.data.appInstallation.metafields.edges[0].node.value;
                 existingBanners = JSON.parse(existingBanners);
+                if (status == 1) {
+                    existingBanners.forEach(banner => {
+                        banner.status = 0;
+                    });
+                }
                 existingBanners.push(...bannerData);
                 bannerData = existingBanners;
             }
@@ -115,10 +120,10 @@ export const action = async ({ request }) => {
                 return { success: false, message: "An error occurred while creating the offer banner." };
             }
 
-            return { success: true, message: "Offer banner has been created." };
+            return { success: true, message: "Offer banner created." };
 
         } else {
-            return { success: false, message: 'Something went wrong while creating the offer banner.' };
+            return { success: false, message: 'Failed to create the offer banner.' };
         }
     
     } catch (error) {

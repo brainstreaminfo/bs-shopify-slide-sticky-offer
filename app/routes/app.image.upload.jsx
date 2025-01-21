@@ -38,7 +38,8 @@ export const action = async ({ request }) => {
         // Get the file data from the request
         const formData = await request.formData();
         const file = formData.get('file');
-        
+        const imageId = formData.get('imageId');
+
         if (!file || !(file instanceof File)) {
             return { success: false, message: 'Image not found.' };
         }
@@ -153,18 +154,37 @@ export const action = async ({ request }) => {
                             return await getFileRequest.json();
                         };
 
+                        // Delete old image
+                        const deleteOldImg = async () => {
+
+                            await admin.graphql(
+                                `#graphql
+                                mutation fileDelete($input: [ID!]!) {
+                                    fileDelete(fileIds: $input) {
+                                        deletedFileIds
+                                    }
+                                }`,
+                                {
+                                    variables: {
+                                        "input": [imageId]
+                                    },
+                                },
+                            );
+                        };
+
                         const getFileResponse = await getFileRequest();
 
                         if (getFileResponse?.data?.node?.image?.url) {
-                            return { success: true, data: getFileResponse.data.node, message: 'Image uploaded successfully.' };
+                            if (imageId) { await deleteOldImg(); }
+                            return { success: true, data: getFileResponse.data.node, message: 'Image uploaded.' };
 
                         } else {
                             const retryResponse = await retryRequest(getFileRequest, 3, 1000);
-                            
                             if (retryResponse?.data?.node?.image?.url) {
-                                return { success: true, data: retryResponse.data.node, message: 'Image uploaded successfully after retry.'};
+                                if (imageId) { await deleteOldImg(); }
+                                return { success: true, data: retryResponse.data.node, message: 'Image uploaded after retry.'};
                             } else {
-                                return { success: false, message: 'Something went wrong while uploading image.' };
+                                return { success: false, message: 'Failed to upload the image.' };
                             }
                         }
 
@@ -173,7 +193,7 @@ export const action = async ({ request }) => {
                     }
 
                 } else {
-                    return { success: false, message: 'Something went wrong while uploading image.' };
+                    return { success: false, message: 'Failed to upload the image.' };
                 }
 
             } catch (error) {                
@@ -181,7 +201,7 @@ export const action = async ({ request }) => {
             }
 
         } else {
-            return { success: false, message: 'Something went wrong while uploading image.' };
+            return { success: false, message: 'Failed to upload the image.' };
         }
         
     } catch (error) {        
