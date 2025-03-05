@@ -1,7 +1,7 @@
 # Learn more about configuring your app at https://shopify.dev/docs/apps/tools/cli/configuration
 
 client_id = "73b7a6dc3857140651405b808ec2c878"
-application_url = "https://corporations-analyzed-fan-herb.trycloudflare.com"
+application_url = "https://store.kg2pgems.in/"
 embedded = true
 name = "BS SlideIn Sticky Offer Banner"
 handle = "bs-slidein-sticky-offer-banner"
@@ -32,9 +32,9 @@ scopes = "read_files,read_themes,write_files,write_products,write_themes"
 
 [auth]
 redirect_urls = [
-  "https://corporations-analyzed-fan-herb.trycloudflare.com/auth/callback",
-  "https://corporations-analyzed-fan-herb.trycloudflare.com/auth/shopify/callback",
-  "https://corporations-analyzed-fan-herb.trycloudflare.com/api/auth/callback"
+  "https://store.kg2pgems.in/auth/callback",
+  "https://store.kg2pgems.in/auth/shopify/callback",
+  "https://store.kg2pgems.in/api/auth/callback"
 ]
 
 [pos]
