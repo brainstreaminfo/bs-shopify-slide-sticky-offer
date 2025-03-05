@@ -33,8 +33,10 @@
     "@shopify/polaris": "^12.27.0",
     "@shopify/shopify-app-remix": "^3.4.0",
     "@shopify/shopify-app-session-storage-prisma": "^5.1.5",
+    "dotenv": "^16.4.7",
     "form-data": "^4.0.1",
     "isbot": "^5.1.0",
+    "prisma": "^5.22.0",
     "react": "^18.2.0",
     "react-datepicker": "^7.5.0",
     "react-dom": "^18.2.0",
@@ -51,7 +53,6 @@
     "eslint": "^8.42.0",
     "eslint-config-prettier": "^9.1.0",
     "prettier": "^3.2.4",
-    "prisma": "^6.2.1",
     "typescript": "^5.2.2",
     "vite": "^5.1.3"
   },
