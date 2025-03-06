@@ -3,7 +3,7 @@
 client_id = "73b7a6dc3857140651405b808ec2c878"
 application_url = "https://store.kg2pgems.in"
 embedded = true
-name = "BS SlideIn Sticky Offer Banner"
+name = "BS Slide-In Sticky Banner"
 handle = "bs-slidein-sticky-offer-banner"
 
 [build]

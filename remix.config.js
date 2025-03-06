@@ -23,5 +23,6 @@ module.exports = {
     SHOPIFY_APP_URL: process.env.SHOPIFY_APP_URL,
     SHOPIFY_API_KEY: process.env.SHOPIFY_API_KEY,
     SHOPIFY_API_SECRET: process.env.SHOPIFY_API_SECRET,
-  }
+  },
+  publicPath: "/build/",
 };
