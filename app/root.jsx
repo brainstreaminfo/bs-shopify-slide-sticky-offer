@@ -21,8 +21,8 @@ export default function App() {
         <link rel="stylesheet" href="/styles/wnoty.css" />
         <Meta />
         <Links />
-        <script src="/js/wnoty.js" defer></script>
-        <script src="/jquery/jquery-3.7.0.js"></script>
+        <script src="/wnoty.js" defer></script>
+        <script src="/jquery-3.7.0.js"></script>
       </head>
       <body>
         <Outlet />
