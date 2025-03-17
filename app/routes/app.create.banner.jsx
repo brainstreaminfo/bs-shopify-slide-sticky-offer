@@ -9,12 +9,12 @@ import {
     Thumbnail,
     TextField,
     BlockStack,
-    ButtonGroup,
     SkeletonPage,
     SkeletonBodyText,
     SkeletonDisplayText
 } from '@shopify/polaris';
 import DatePicker from "react-datepicker";
+import { useNavigate } from 'react-router-dom';
 import { authenticate } from "../shopify.server";
 import "react-datepicker/dist/react-datepicker.css";
 import { useState, useEffect, useCallback } from 'react';
@@ -27,21 +27,19 @@ export const loader = async ({ request }) => {
 
 export default function CreateBanner() {
 
+    const navigate = useNavigate();
     const [loading, setLoading] = useState(true);
     const [statusIndex, setStatusIndex] = useState(0);
     const [isSaveLoading, setIsSaveLoading] = useState(false);
 
-    const handleStatusClick = useCallback(
-        (index) => {
-            if (statusIndex === index) return;
-            setStatusIndex(index);
-        },
-        [statusIndex],
-    );
-
     useEffect(() => {
         setTimeout(() => { setLoading(false); }, 200);
     }, []);
+
+    const handleToggle = (e) => {
+        const newStatus = e.target.checked ? 1 : 0;
+        setStatusIndex(newStatus);
+    };
 
     const [formValues, setFormValues] = useState({
         title: "",
@@ -73,14 +71,14 @@ export default function CreateBanner() {
     // Start Date
     const [startDate, setStartDate] = useState(new Date());
     const handleStartDateChange = (date) => {
-        const formattedDate = new Date(date);
+        const formattedDate = date ? new Date(date) : null;
         setStartDate(formattedDate);        
     };
 
     // End Date
     const [endDate, setEndDate] = useState(() => new Date(Date.now() + 86400000));
     const handleEndDateChange = (date) => {
-        const formattedDate = new Date(date);
+        const formattedDate = date ? new Date(date) : null;
         setEndDate(formattedDate);        
     };
 
@@ -134,33 +132,45 @@ export default function CreateBanner() {
     
     // Form Validation
     const validateForm = () => {
+        const quotesRegex = /['"]/g;
+        const urlRegex = /^(https?:\/\/)([\w.-]+)\.([a-z]{2,})(:\d+)?(\/[\w.-]*)*(\?[\w=&%-]*)?(#[\w-]*)?$/i;
 
         const errors = {
-            title: formValues.title && formValues.title.trim() !== "" ? "" : "Title is required.",
-            link: formValues.link && formValues.link.trim() !== "" ? "" : "Link is required.",
+            title: !formValues.title?.trim() 
+                ? "Title is required."
+                : quotesRegex.test(formValues.title.trim())
+                ? "Title cannot contain single or double quotation marks."
+                : "",
+            link: !formValues.link?.trim() 
+                ? "Link is required." 
+                : !urlRegex.test(formValues.link.trim()) 
+                ? "Enter a valid URL." 
+                : "",
+            image: !file 
+                ? "Image is required."
+                : file && !validImageTypes.includes(file.type) 
+                ? "Invalid image type. Only .jpg, .jpeg, and .png are allowed."
+                : file && file.size > 8 * 1024 * 1024 
+                ? "Image size must be less than 8 MB."
+                : "",
+            startDate : startDate ? "" : "Start date & time is required.",
+            endDate : !endDate 
+                ? "End date & time is required."
+                : endDate < startDate
+                ? "End date & time must be later than the start date and time."
+                : "",
+            width: !formValues.width
+                ? "Banner width is required."
+                : formValues.width > 876
+                ? "Banner Width must be less than 876px."
+                : ""
         };
-        
-        if (!formValues.width) {
-            errors.width = "Banner width is required.";
-        } else if (formValues.width > 876) {
-            errors.width = "Banner Width must be less than 876px.";
-        }  else {
-            errors.width = "";
-        }
-        
-        if (!file) {
-            errors.image = "Image is required.";
-        } else if (!validImageTypes.includes(file.type)) {
-            errors.image = "Invalid image type. Only .jpg, .jpeg, and .png are allowed.";
-        }  else if (file.size > 8 * 1024 * 1024) {  // 8 MB = 8 * 1024 * 1024 bytes
-            errors.image = "Image size must be less than 8 MB.";
-        }
         
         setFormErrors(errors);
         return !Object.values(errors).some(Boolean);
     };
 
-    // Save Offer Banner
+    // Save Banner
     const handleSave = async () => {
 
         if (!validateForm()) return;
@@ -181,11 +191,7 @@ export default function CreateBanner() {
             const imageResponse = await uploadImage.json();
     
             if (!imageResponse.success) {
-                $.wnoty({
-                    type: 'error',
-                    message: imageResponse.message || 'Image upload failed.',
-                    autohideDelay: 3000,
-                });
+                $.wnoty({ type: 'error', message: imageResponse.message || 'Failed to upload image.', autohideDelay: 3000 });
                 setIsSaveLoading(false);
                 return;
             }
@@ -206,37 +212,16 @@ export default function CreateBanner() {
             const saveResponse = await saveBanner.json();
     
             if (!saveResponse.success) {
-                $.wnoty({
-                    type: 'error',
-                    message: saveResponse.message || 'Banner save failed.',
-                    autohideDelay: 3000,
-                });
+                $.wnoty({ type: 'error', message: saveResponse.message || 'Failed to create banner.', autohideDelay: 3000 });
                 setIsSaveLoading(false);
                 return;
             }
     
-            setFormValues({
-                title: "",
-                link: "",
-                width: 576,
-            });
-            setStartDate(new Date());
-            setEndDate(new Date(Date.now() + 86400000));
-            setFile("");
-            setStatusIndex(0);
-
-            $.wnoty({
-                type: 'success',
-                message: saveResponse.message,
-                autohideDelay: 3000,
-            });
+            navigate('/app/banner/list');
+            $.wnoty({ type: 'success', message: saveResponse.message, autohideDelay: 3000 });
     
         } catch (error) {
-            $.wnoty({
-                type: 'error',
-                message: 'Something went wrong while creating the offer banner. Please try again.',
-                autohideDelay: 3000,
-            });
+            $.wnoty({ type: 'error', message: 'Failed to create banner.', autohideDelay: 3000 });
 
         } finally {
             setIsSaveLoading(false);
@@ -245,7 +230,7 @@ export default function CreateBanner() {
 
     return loading ? (
 
-        <SkeletonPage title="Create Offer Banner" primaryAction>
+        <SkeletonPage title="Create Banner" primaryAction>
             <Layout>
                 <Layout.Section>
                     <Card roundedAbove="sm">
@@ -283,8 +268,8 @@ export default function CreateBanner() {
     ) : (
 
         <Page 
-            title="Create Offer Banner"
-            backAction={{content: 'home', url: '/app'}}
+            title="Create Banner"
+            backAction={{content: 'home', url: '/app/banner/list'}}
             primaryAction={
                 <Button 
                     loading={isSaveLoading}
@@ -315,10 +300,17 @@ export default function CreateBanner() {
                                         name="title"
                                         value={formValues.title}
                                         onChange={(e) => handleChange(e, "title")}
-                                        placeholder="Title as offer name"
+                                        placeholder="Enter title"
                                         autoComplete="off"
-                                        error={formErrors.title}
                                     />
+                                    {formErrors.title && (
+                                        <div className="imgError">
+                                            <Icon source={AlertCircleIcon} color="critical" />
+                                            <span color="critical" variant="bodySm">
+                                                {formErrors.title}
+                                            </span>
+                                        </div>
+                                    )}
 
                                     <div style={{ height: "15px" }}></div>
 
@@ -329,7 +321,7 @@ export default function CreateBanner() {
                                     {formErrors.image && (
                                         <div className="imgError">
                                             <Icon source={AlertCircleIcon} color="critical" />
-                                            <span color="critical" variant="bodySm" style={{ marginLeft: '8px' }}>
+                                            <span color="critical" variant="bodySm">
                                                 {formErrors.image}
                                             </span>
                                         </div>
@@ -347,12 +339,19 @@ export default function CreateBanner() {
                                         onChange={(e) => handleChange(e, "link")}
                                         placeholder="https://"
                                         autoComplete="off"
-                                        error={formErrors.link}
                                     />
+                                    {formErrors.link && (
+                                        <div className="imgError">
+                                            <Icon source={AlertCircleIcon} color="critical" />
+                                            <span color="critical" variant="bodySm">
+                                                {formErrors.link}
+                                            </span>
+                                        </div>
+                                    )}
 
                                     <div style={{ height: "15px" }}></div>
 
-                                    <label style={{ marginBottom: "4px" }}>Start Date & Time (UTC)</label>
+                                    <label style={{ marginBottom: "4px" }}>Start Date & Time</label>
                                     <DatePicker
                                         selected={startDate}
                                         onChange={handleStartDateChange}
@@ -361,11 +360,21 @@ export default function CreateBanner() {
                                         timeIntervals={15}
                                         dateFormat="MMMM d, yyyy h:mm aa"
                                         timeCaption="Time"
+                                        isClearable
+                                        placeholderText="Select start date & time"
                                     />
+                                    {formErrors.startDate && (
+                                        <div className="imgError">
+                                            <Icon source={AlertCircleIcon} color="critical" />
+                                            <span color="critical" variant="bodySm">
+                                                {formErrors.startDate}
+                                            </span>
+                                        </div>
+                                    )}
 
                                     <div style={{ height: "15px" }}></div>
 
-                                    <label style={{ marginBottom: "4px" }}>End Date & Time (UTC)</label>
+                                    <label style={{ marginBottom: "4px" }}>End Date & Time</label>
                                     <DatePicker
                                         selected={endDate}
                                         onChange={handleEndDateChange}
@@ -374,7 +383,17 @@ export default function CreateBanner() {
                                         timeIntervals={15}
                                         dateFormat="MMMM d, yyyy h:mm aa"
                                         timeCaption="Time"
+                                        isClearable
+                                        placeholderText="Select end date & time"
                                     />
+                                    {formErrors.endDate && (
+                                        <div className="imgError">
+                                            <Icon source={AlertCircleIcon} color="critical" />
+                                            <span color="critical" variant="bodySm">
+                                                {formErrors.endDate}
+                                            </span>
+                                        </div>
+                                    )}
 
                                     <div style={{ height: "15px" }}></div>
 
@@ -385,33 +404,35 @@ export default function CreateBanner() {
                                         value={formValues.width}
                                         onChange={(e) => handleChange(e, "width")}
                                         placeholder="576"
-                                        error={formErrors.width}
                                         max="876"
                                     />
+                                    {formErrors.width && (
+                                        <div className="imgError">
+                                            <Icon source={AlertCircleIcon} color="critical" />
+                                            <span color="critical" variant="bodySm">
+                                                {formErrors.width}
+                                            </span>
+                                        </div>
+                                    )}
 
                                     <div style={{ height: "15px" }}></div>
 
                                     <div>
-                                        <label htmlFor="end-date-picker">Status</label>
+                                        <label htmlFor="status-toggle">Status</label>
                                         <div style={{ marginTop: "4px" }}>
-                                            <ButtonGroup variant="segmented">
-                                                <Button
-                                                    pressed={statusIndex === 1}
-                                                    onClick={() => handleStatusClick(1)}
-                                                >
-                                                    Active
-                                                </Button>
-                                                <Button
-                                                    pressed={statusIndex === 0}
-                                                    onClick={() => handleStatusClick(0)}
-                                                >
-                                                    Inactive
-                                                </Button>
-                                            </ButtonGroup>
-                                            <p style={{ fontSize: "12px", color: "gray", marginTop: "4px" }}>
-                                                If you set this offer banner status as active, all other offer banners status will automatically be set to inactive.
-                                            </p>
+                                            <label className="switch">
+                                                <input
+                                                    type="checkbox"
+                                                    id="status-toggle"
+                                                    checked={statusIndex == 1}
+                                                    onChange={handleToggle}
+                                                />
+                                                <span className="slider"></span>
+                                            </label>
                                         </div>
+                                        <p style={{ fontSize: "12px", color: "gray", marginTop: "4px" }}>
+                                            If you set this banner status as active, all other banners status will automatically be set to inactive.
+                                        </p>
                                     </div>
 
                                 </BlockStack>

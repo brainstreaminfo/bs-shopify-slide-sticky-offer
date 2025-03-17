@@ -35,8 +35,8 @@ export const action = async ({ request }) => {
                 imageId: image.id,
                 imageUrl: image.image.url,
                 link: formData.link,
-                startDate: format(new Date(startDate), 'yyyy-MM-dd HH:mm:ss'),
-                endDate: format(new Date(endDate), 'yyyy-MM-dd HH:mm:ss'),
+                startDate: new Date(startDate).toISOString(),
+                endDate: new Date(endDate).toISOString(),
                 width: formData.width,
                 status: status
             }]
@@ -117,16 +117,16 @@ export const action = async ({ request }) => {
             const createMetaResponse = await createMetaquery.json();
                 
             if (createMetaResponse?.data?.metafieldsSet?.metafields?.userErrors?.length) {                
-                return { success: false, message: "An error occurred while creating the offer banner." };
+                return { success: false, message: "Failed to create the banner." };
             }
 
-            return { success: true, message: "Offer banner created." };
+            return { success: true, message: "Banner created." };
 
         } else {
-            return { success: false, message: 'Failed to create the offer banner.' };
+            return { success: false, message: 'Failed to create the banner.' };
         }
     
     } catch (error) {
-        return { success: false, message: "An error occurred while creating the offer banner." };
+        return { success: false, message: "Error occurred while creating the banner." };
     }
 }

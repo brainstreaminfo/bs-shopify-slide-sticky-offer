@@ -62,10 +62,10 @@ export const action = async ({ request }) => {
             return { success: true, data: bannerData, message: "Banners data." };
 
         } else {
-            return { success: false, message: 'Something went wrong while fetching the offer banner.' };
+            return { success: false, message: 'Failed to fetch banner.' };
         }
     
     } catch (error) {
-        return { success: false, message: "An error occurred while fetching the offer banner." };
+        return { success: false, message: "Failed to fetch banner." };
     }
 }

@@ -8,8 +8,8 @@ const updateObjectInArray = (array, { uid, image, formData, startDate, endDate, 
             if (formData.link !== undefined) obj.link = formData.link;
             if (status !== undefined) obj.status = status;
             if (formData.width !== undefined) obj.width = formData.width;
-            if (startDate !== undefined) obj.startDate = format(new Date(startDate), 'yyyy-MM-dd HH:mm:ss');
-            if (endDate !== undefined) obj.endDate = format(new Date(endDate), 'yyyy-MM-dd HH:mm:ss');
+            if (startDate !== undefined) obj.startDate = new Date(startDate).toISOString();
+            if (endDate !== undefined) obj.endDate = new Date(endDate).toISOString();
             if (image && image?.id && image?.image?.url) {
                 if (image.image.url !== undefined) obj.imageUrl = image.image.url;
                 if (image.id !== undefined) obj.imageId = image.id;
@@ -120,7 +120,7 @@ export const action = async ({ request }) => {
                 const createMetaResponse = await createMetaquery.json();
                     
                 if (createMetaResponse?.data?.metafieldsSet?.metafields?.userErrors?.length) {                
-                    return { success: false, message: "An error occurred while updating the offer banner." };
+                    return { success: false, message: "Failed to update the banner." };
                 }
 
                 // Delete banner image if image changed
@@ -140,17 +140,17 @@ export const action = async ({ request }) => {
                 //     );
                 // }
                 
-                return { success: true, message: "Offer banner updated." };
+                return { success: true, message: "Banner updated." };
 
             }  else {
-                return { success: false, message: 'Failed to update the offer banner.' };
+                return { success: false, message: 'Failed to update the banner.' };
             }
 
         } else {
-            return { success: false, message: 'Failed to update the offer banner.' };
+            return { success: false, message: 'Failed to update the banner.' };
         }
     
     } catch (error) {        
-        return { success: false, message: "An error occurred while updating the offer banner." };
+        return { success: false, message: "Error occurred while updating the banner." };
     }
 }

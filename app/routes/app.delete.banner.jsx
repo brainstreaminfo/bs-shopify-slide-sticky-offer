@@ -122,20 +122,20 @@ export const action = async ({ request }) => {
                 const createMetaResponse = await createMetaquery.json();
                     
                 if (createMetaResponse?.data?.metafieldsSet?.metafields?.userErrors?.length) {                
-                    return { success: false, message: "An error occurred while deleting the offer banner." };
+                    return { success: false, message: "Error occurred while deleting the banner." };
                 }
 
-                return { success: true, message: "Offer banner deleted." };
+                return { success: true, message: "Banner deleted." };
 
             } else {
-                return { success: false, message: 'Failed to delete the offer banner..' };
+                return { success: false, message: 'Failed to delete the banner..' };
             }
 
         } else {
-            return { success: false, message: 'Failed to delete the offer banner..' };
+            return { success: false, message: 'Failed to delete the banner..' };
         }
     
     } catch (error) {        
-        return { success: false, message: "An error occurred while deleting the offer banner." };
+        return { success: false, message: "An error occurred while deleting the banner." };
     }
 }

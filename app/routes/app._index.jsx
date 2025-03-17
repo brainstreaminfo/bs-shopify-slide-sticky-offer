@@ -1,16 +1,10 @@
 import {
+    Text,
     Page,
     Card,
-    Badge,
     Layout,
     Button,
-    IndexTable,
     BlockStack,
-    InlineGrid,
-    EmptyState,
-    Pagination,
-    SkeletonBodyText,
-    useIndexResourceState
 } from '@shopify/polaris';
 import { format } from 'date-fns';
 import { useState, useEffect } from 'react';
@@ -26,170 +20,8 @@ export const loader = async ({ request }) => {
 export default function Index() {
 
     const navigate = useNavigate();
-    const [bannersData, setBannersData] = useState([]);
-    const [deleteBannerId, setDeleteBannerId] = useState("");
-    const [loading, setLoading] = useState(true);
-    const [isClient, setIsClient] = useState(true);
     const [isEnableAppLink, setIsEnableAppLink] = useState(false);
-    const [isDeleting, setIsDeleting] = useState(false);
-
-    const fetchBannerData = async () => {
-
-        try {
-
-            const fetchBanners = await fetch('/app/fetch/banners', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-            });
-
-            const bannersResponse = await fetchBanners.json();
-
-            if (bannersResponse.success) {
-                setBannersData(bannersResponse.data);
-            }
-
-        } catch (error) {
-            $.wnoty({
-                type: 'error',
-                message: 'An error occurred. Please refresh the page and try again.',
-                autohideDelay: 3000,
-            });
-
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    useEffect(() => {
-        fetchBannerData();
-        setIsClient(false);
-    }, []);
-
-    // Pagination calculations
-    const itemsPerPage = 10;
-    const [currentPage, setCurrentPage] = useState(1);
-    const totalPages = Math.ceil(bannersData.length / itemsPerPage);
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    const endIndex = startIndex + itemsPerPage;
-    const currentData = bannersData.slice(startIndex, endIndex);
-
-    const handlePreviousPage = () => {
-        setCurrentPage(prev => Math.max(prev - 1, 1));
-    };
-
-    const handleNextPage = () => {
-        setCurrentPage(prev => Math.min(prev + 1, totalPages));
-    };
-
-    // Table Resource
-    const resourceName = {
-        singular: 'banner',
-        plural: 'banners',
-    };
-
-    const {selectedResources} = useIndexResourceState(currentData);
-
-    const rowMarkup = currentData.map(
-        ({uid, title, status, startDate, endDate, width}, index,) => (
-            <IndexTable.Row
-                id={uid}
-                key={uid}
-                selected={selectedResources.includes(uid)}
-                position={index}
-            >
-                <IndexTable.Cell>{title}</IndexTable.Cell>
-                <IndexTable.Cell>{format(new Date(startDate), 'MMMM d, yyyy h:mm aa')}</IndexTable.Cell>
-                <IndexTable.Cell>{format(new Date(endDate), 'MMMM d, yyyy h:mm aa')}</IndexTable.Cell>
-                <IndexTable.Cell>{width}</IndexTable.Cell>
-                <IndexTable.Cell>
-                    {status === 1 ? (
-                        <Badge tone="success">Active</Badge>
-                    ) : (
-                        <Badge tone="critical">Inactive</Badge>
-                    )}
-                </IndexTable.Cell>
-                <IndexTable.Cell>
-                    <div>
-                        <span style={{ paddingRight: "5px" }}>
-                            <Button icon={EditIcon} onClick={() => navigate(`/app/edit/banner?uid=${uid}`)} accessibilityLabel="Edit banner" />
-                        </span>
-                        <Button icon={DeleteIcon} onClick={() => showModal(uid)} accessibilityLabel="Edit banner" />
-                    </div>
-                </IndexTable.Cell>
-            </IndexTable.Row>
-        ),
-    );
-
-    const skeletonRowMarkup = [...Array(5)].map((_, index) => (
-        <IndexTable.Row id={`skeleton-${index}`} key={`skeleton-${index}`} position={index}>
-            <IndexTable.Cell><div style={{ height: "18px", paddingTop: "5px" }}><SkeletonBodyText lines={1} /></div></IndexTable.Cell>
-            <IndexTable.Cell><div style={{ height: "18px", paddingTop: "5px" }}><SkeletonBodyText lines={1} /></div></IndexTable.Cell>
-            <IndexTable.Cell><div style={{ height: "18px", paddingTop: "5px" }}><SkeletonBodyText lines={1} /></div></IndexTable.Cell>
-        </IndexTable.Row>
-    ));
-
-    const emptyStateMarkup = (
-        <EmptyState
-            heading="Create offer banner"
-            image="https://cdn.shopify.com/shopifycloud/web/assets/v1/vite/client/en/assets/empty-state-media-DnFQWaULcLdk.svg"
-        >
-            <p>Create an offer banner to showcase special offers to your customers.</p>
-        </EmptyState>
-    );
-
-    // Show Delete Modal
-    const showModal = (id) => {
-        document.getElementById('confirm-modal').show();
-        setDeleteBannerId(id);
-    };
-
-    // Delete Banner
-    const deleteBanner = async() => {
-
-        try {
-
-            setIsDeleting(true);
-
-            const deleteBanner = await fetch('/app/delete/banner', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    uid: deleteBannerId,
-                }),
-            });
-
-            const deleteResponse = await deleteBanner.json();
-
-            if (deleteResponse.success) {
-                setDeleteBannerId("");
-                fetchBannerData();
-                $.wnoty({
-                    type: 'success',
-                    message: deleteResponse.message,
-                    autohideDelay: 3000,
-                });
-
-            } else {
-                $.wnoty({
-                    type: 'error',
-                    message: deleteResponse.message,
-                    autohideDelay: 3000,
-                });
-            }
-
-        } catch (error) {
-            $.wnoty({
-                type: 'error',
-                message: 'Something went wrong while deleting the offer banner.',
-                autohideDelay: 3000,
-            });
-
-        } finally {
-            setIsDeleting(false);
-            document.getElementById('confirm-modal').hide();
-        }
-    };
-
+   
     // Enable App Link
     const enableAppLink = async() => {
 
@@ -223,9 +55,9 @@ export default function Index() {
 
                 <Layout.Section>
                      <Card sectioned>
-                        <p style={{ fontSize: "14px", fontWeight: "bold" }}>Welcome to BS SlideIn Sticky Offer Banner!</p>
+                        <p style={{ fontSize: "14px", fontWeight: "bold" }}>Welcome to BS Slide-In Sticky Banner!</p>
                         <p style={{ marginTop: "10px" }}>
-                            SlideIn Sticky Offer Banner App adds a sleek, customizable banner that sticks to the side of your store. It slides in and out, showcasing promotions, discounts, or announcements without disrupting your content. Boost customer engagement and drive conversions effortlessly!
+                            BS Slide-In Sticky Banner App adds a sleek, customizable banner that sticks to the side of your store. It slides in and out, showcasing promotions, discounts, or announcements without disrupting your content. Boost customer engagement and drive conversions effortlessly!
                         </p>
                     </Card>
                 </Layout.Section>
@@ -246,96 +78,29 @@ export default function Index() {
                     </Card>
                 </Layout.Section>
 
-            </Layout>
+                <Layout.Section>
+                    <Card>
+                        <BlockStack gap="200">
+                            <Text as="h2" variant="headingMd">
+                                Setup guide
+                            </Text>
 
-            <div style={{ marginTop: "15px" }}>
-
-                <Card roundedAbove="sm">
-
-                    <BlockStack gap="200">
-
-                        <InlineGrid columns="1fr auto">
-                            <div style={{ fontSize: "17px", fontWeight: "bold" }}>
-                                Offer Banners
+                            <div style={{ background: "rgba(247, 247, 247, 1)", padding: "15px 25px", borderRadius: "10px", marginTop: "5px" }}>
+                                <p style={{ fontWeight: "bold" , marginBottom: "4px" }}>Add your banners</p>
+                                <p style={{ fontSize: "13px", marginBottom: "14px" }}>Write a title, add an image, include a link, set the start and end dates, set the banner width and set the status for the banner.</p>
+                                <Button variant="secondary" onClick={() => navigate('/app/create/banner')}>Add banner</Button>
                             </div>
-                            <Button
-                                onClick={() => navigate('/app/create/banner')}
-                                accessibilityLabel="Create Banner"
-                                icon={PlusIcon}
-                                variant="primary"
-                                size="slim"
-                            >
-                                Create Banner
-                            </Button>
-                        </InlineGrid>
-                      
-                        <div style={{ margin: "5px -15px -15px -15px" }}>
 
-                        {!isClient && (
+                            <div style={{ background: "rgba(247, 247, 247, 1)", padding: "15px 25px", borderRadius: "10px", marginTop: "5px", }}>
+                                <p style={{ fontWeight: "bold" , marginBottom: "4px" }}>Enable app</p>
+                                <p style={{ fontSize: "13px" }}>Click the top-right "Enable App" button to enable the app on your published theme.</p>
+                            </div>
 
-                            <>
-                                {loading ? (
+                        </BlockStack>
+                    </Card>
+                </Layout.Section>
 
-                                    <IndexTable
-                                        resourceName={resourceName}
-                                        itemCount={5}
-                                        headings={[]}
-                                        selectable={false}
-                                    >
-                                        {skeletonRowMarkup}
-                                    </IndexTable>
-
-                                ) : (
-
-                                    <>
-                                        <IndexTable
-                                            resourceName={resourceName}
-                                            itemCount={currentData.length}
-                                            emptyState={emptyStateMarkup}
-                                            headings={[
-                                                {title: 'Title'},
-                                                {title: 'Start Date'},
-                                                {title: 'End Date'},
-                                                {title: 'Width'},
-                                                {title: 'Status'},
-                                                {title: 'Action'}
-                                            ]}
-                                            selectable={false}
-                                        >
-                                            {rowMarkup}
-                                        </IndexTable>
-
-                                        {totalPages > 1 && (
-                                            <div style={{ padding: "16px", display: "flex", justifyContent: "center" }}>
-                                                <Pagination
-                                                    label={`Page ${currentPage} of ${totalPages}`}
-                                                    hasPrevious={currentPage > 1}
-                                                    onPrevious={handlePreviousPage}
-                                                    hasNext={currentPage < totalPages}
-                                                    onNext={handleNextPage}
-                                                />
-                                            </div>
-                                        )}
-                                    </>
-                                )}
-                            </>
-                        )}
-
-                        </div>
-
-                    </BlockStack>
-
-                </Card>
-                
-            </div>
-
-            <ui-modal id="confirm-modal" variant="small">
-                <ui-title-bar title="Delete Offer Banner">
-                <button variant="primary" id='delete-banner-btn' onClick={() => deleteBanner()} disabled={isDeleting}>{isDeleting ? 'Deleting...' : 'Yes, Delete it'}</button>
-                <button onClick={() => document.getElementById('confirm-modal').hide()} disabled={isDeleting}>Cancel</button>
-                </ui-title-bar>
-                <p style={{ padding: '16px 12px', fontSize: '15px' }}>Are you sure you want to delete?</p>
-            </ui-modal>
+            </Layout>
 
         </Page>
     );

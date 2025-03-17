@@ -132,18 +132,19 @@
 
             if (bannersData) {
 
-                const bsBannerSection = document.getElementById('bs-slideIn-banner-section');        
-                const currantDate = new Date();
-                const utcCurrantDate = currantDate.toISOString().slice(0, 19).replace('T', ' ');
-                
+                const now = new Date();
+                const currentDate = now.toLocaleString('sv').replace('T', ' ');
+                const bsBannerSection = document.getElementById('bs-slideIn-banner-section');
+                                
                 for (const banner of bannersData) {
-
+                
                     const startDate = new Date(banner.startDate);
                     const formattedStartDate = startDate.toLocaleString('sv').replace('T', ' ');
+
                     const endDate = new Date(banner.endDate);
                     const formattedEndDate = endDate.toLocaleString('sv').replace('T', ' ');
 
-                    if (utcCurrantDate >= formattedStartDate && utcCurrantDate <= formattedEndDate && banner.status == 1) {
+                    if (currentDate >= formattedStartDate && currentDate <= formattedEndDate && banner.status == 1) {
                         priorityBanner = banner;
                         break;
                     }
