@@ -136,13 +136,17 @@
                 const currentDate = now.toLocaleString('sv').replace('T', ' ');
                 const bsBannerSection = document.getElementById('bs-slideIn-banner-section');
                                 
+                console.log(`currentDate - ${currentDate}`);
+                
                 for (const banner of bannersData) {
                 
                     const startDate = new Date(banner.startDate);
                     const formattedStartDate = startDate.toLocaleString('sv').replace('T', ' ');
+                    console.log(`formattedStartDate - ${formattedStartDate}`);
 
                     const endDate = new Date(banner.endDate);
                     const formattedEndDate = endDate.toLocaleString('sv').replace('T', ' ');
+                    console.log(`formattedEndDate - ${formattedEndDate}`);
 
                     if (currentDate >= formattedStartDate && currentDate <= formattedEndDate && banner.status == 1) {
                         priorityBanner = banner;
