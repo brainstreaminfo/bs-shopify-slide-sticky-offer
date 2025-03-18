@@ -142,7 +142,7 @@ export default function Offers() {
     const emptyStateMarkup = (
         <EmptyState
             heading="Add your banners"
-            image="/images/empty.svg"
+            image="/build/client/images/empty.svg"
         >
             <p>Create an banner to showcase special offers to your customers.</p>
         </EmptyState>
