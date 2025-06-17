@@ -1,4 +1,4 @@
-{% assign bannersData = app.metafields.slide-in-sticky-offer-banner.bs-slideIn-banner-OV27PT.value %}
+{% assign banners_data = app.metafields.slide-in-sticky-offer-banner.bs-slideIn-banner-OV27PT.value %}
 
 <div id="bs-slideIn-banner-section"></div>
 
@@ -128,7 +128,7 @@
 
         document.addEventListener('DOMContentLoaded', () => {
 
-            const bannersData = parseBannersData('{{ bannersData | escape }}');
+            const bannersData = parseBannersData('{{ banners_data | escape }}');
 
             if (bannersData) {
 
